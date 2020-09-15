@@ -1,4 +1,6 @@
-use super::dtos::{OpenOrders, Trades};
+use super::dtos::{FutureOperation, OpenOrders, Trades};
+use super::helpers::{get_operation_type, OperationType};
+use chrono::{TimeZone, Utc};
 use coinnect::error::{Error, ErrorKind, Result};
 use coinnect::kraken::{KrakenApi, KrakenCreds};
 use serde_json::{self, Map, Value};
@@ -63,10 +65,52 @@ impl KrakenOpr {
         }
     }
 
-    pub fn calc_profit(&mut self) -> Result<String> {
+    pub fn get_buy_prices(&mut self) -> Result<Vec<FutureOperation>> {
         let trades_active = self.get_trades()?.trades;
-        let current_balance = self.get_current_balance();
+        let current_balance = self.get_current_balance()?;
 
-        Ok("ok".to_string())
+        let trades_to_operate: Vec<FutureOperation> = trades_active
+            .into_iter()
+            .filter(|(_key, trade)| {
+                current_balance
+                    .get(&trade.pair.replace("EUR", ""))
+                    .is_some()
+                    && trade.trade_type == get_operation_type(OperationType::BUY)
+            })
+            .map(|(_key, trade)| {
+                let quantity = current_balance
+                    .get(&trade.pair.replace("EUR", ""))
+                    .unwrap()
+                    .to_string();
+                FutureOperation::from((trade, quantity))
+            })
+            .fold(&mut vec![], |acc: &mut Vec<FutureOperation>, curr| {
+                let acc_copy = acc.to_vec();
+                let prev_future_operation_option: Option<FutureOperation> = acc_copy
+                    .into_iter()
+                    .find(|future_operation| future_operation.pair == curr.pair);
+
+                if let Some(prev_future_operation) = prev_future_operation_option {
+                    if Utc
+                        .timestamp(prev_future_operation.operation_time, 0)
+                        .le(&Utc.timestamp(curr.operation_time, 0))
+                    {
+                        let prev_index = acc
+                            .iter_mut()
+                            .position(|future_operation| future_operation.pair == curr.pair)
+                            .unwrap();
+                        acc[prev_index] = curr;
+                        acc
+                    } else {
+                        acc
+                    }
+                } else {
+                    acc.push(curr);
+                    acc
+                }
+            })
+            .clone();
+
+        Ok(trades_to_operate.to_vec())
     }
 }

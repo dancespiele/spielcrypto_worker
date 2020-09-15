@@ -18,6 +18,6 @@ fn on_cron(_name: &str) {
 
     let mut kraken_opr = KrakenOpr::new(cred);
 
-    let kraken_open_order = kraken_opr.get_active_orders();
+    let kraken_open_order = kraken_opr.get_buy_prices();
     println!("Kraken time: {:#?}", kraken_open_order);
 }

@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'dancespiele'",
+            "name": "Debug executable 'dancespiele_worker'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=dancespiele",
-                    "--package=dancespiele"
+                    "--bin=dancespiele_worker",
+                    "--package=dancespiele_worker"
                 ],
                 "filter": {
-                    "name": "dancespiele",
+                    "name": "dancespiele_worker",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'dancespiele'",
+            "name": "Debug unit tests in executable 'dancespiele_worker'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=dancespiele",
-                    "--package=dancespiele"
+                    "--bin=dancespiele_worker",
+                    "--package=dancespiele_worker"
                 ],
                 "filter": {
-                    "name": "dancespiele",
+                    "name": "dancespiele_worker",
                     "kind": "bin"
                 }
             },

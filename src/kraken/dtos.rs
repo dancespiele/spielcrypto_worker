@@ -62,5 +62,26 @@ pub struct Order {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct OpenOrders {
-    open: HashMap<String, Order>,
+    pub open: HashMap<String, Order>,
+}
+
+#[derive(Clone, Debug)]
+pub struct FutureOperation {
+    pub buy_price: f32,
+    pub pair: String,
+    pub quantity: String,
+    pub operation_time: i64,
+}
+
+impl From<(Trade, String)> for FutureOperation {
+    fn from(future_operation: (Trade, String)) -> Self {
+        let (trade, quantity) = future_operation;
+
+        Self {
+            buy_price: trade.price.parse().unwrap(),
+            pair: trade.pair,
+            quantity,
+            operation_time: trade.time as i64,
+        }
+    }
 }
