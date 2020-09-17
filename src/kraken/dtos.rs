@@ -1,4 +1,7 @@
-use serde::{Deserialize, Serialize};
+use serde::{
+    de::{value::SeqDeserializer, Error, Visitor},
+    Deserialize, Serialize,
+};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -82,6 +85,41 @@ impl From<(Trade, String)> for FutureOperation {
             pair: trade.pair,
             quantity,
             operation_time: trade.time as i64,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct CurrentPrice {
+    pub pair: String,
+    pub price: f32,
+}
+
+impl From<(String, f32)> for CurrentPrice {
+    fn from(current_price: (String, f32)) -> Self {
+        let (pair, price) = current_price;
+
+        Self { pair, price }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct StopLossActive {
+    pub order: String,
+    pub price: f32,
+    pub pair: String,
+    pub current_price: f32,
+}
+
+impl From<(String, f32, CurrentPrice)> for StopLossActive {
+    fn from(stop_loss_active: (String, f32, CurrentPrice)) -> Self {
+        let (order, price, current_price) = stop_loss_active;
+
+        Self {
+            order,
+            price,
+            pair: current_price.pair,
+            current_price: current_price.price,
         }
     }
 }

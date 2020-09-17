@@ -13,11 +13,11 @@ fn main() {
 
 // Our cronjob handler.
 fn on_cron(_name: &str) {
-    let cred =
-        KrakenCreds::new_from_file("account_kraken", Path::new("keys.json").to_path_buf()).unwrap();
+    // let cred =
+    //     KrakenCreds::new_from_file("account_kraken", Path::new("keys.json").to_path_buf()).unwrap();
 
-    let mut kraken_opr = KrakenOpr::new(cred);
+    // let mut kraken_opr = KrakenOpr::new(cred);
 
-    let kraken_open_order = kraken_opr.get_buy_prices();
-    println!("Kraken time: {:#?}", kraken_open_order);
+    // let kraken_open_order = kraken_opr.get_buy_prices();
+    println!("Hello dancespiele");
 }
