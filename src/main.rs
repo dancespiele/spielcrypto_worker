@@ -1,3 +1,4 @@
+mod db;
 mod kraken;
 
 use coinnect::kraken::KrakenCreds;

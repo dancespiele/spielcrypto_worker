@@ -1,5 +1,6 @@
 use super::dtos::{CurrentPrice, FutureOperation, OpenOrders, StopLossActive, Trades};
 use super::helpers::{get_operation_type, get_order_type, OperationType, OrderType};
+use crate::db::{DancespieleDB, Percentage};
 use chrono::{TimeZone, Utc};
 use coinnect::error::{Error, ErrorKind, Result};
 use coinnect::kraken::{KrakenApi, KrakenCreds};
@@ -8,12 +9,19 @@ use std::collections::HashMap;
 
 pub struct KrakenOpr {
     kraken_api: KrakenApi,
+    percentages: Vec<Percentage>,
 }
 
 impl KrakenOpr {
-    pub fn new(cred: KrakenCreds) -> Self {
+    pub fn new(cred: KrakenCreds, db_url: &str) -> Self {
         let kraken_api = KrakenApi::new(cred).unwrap();
-        Self { kraken_api }
+        let mut dancespiele_db = DancespieleDB::new(db_url);
+        let percentages = dancespiele_db.fetch_coins_percentages_stop_loss().unwrap();
+
+        Self {
+            kraken_api,
+            percentages,
+        }
     }
 
     fn get_trades(&mut self) -> Result<Trades> {
@@ -146,6 +154,52 @@ impl KrakenOpr {
         Ok(price_close.to_string())
     }
 
+    fn calc_benefit(&mut self, price_ordered: f32, current_price: f32) -> String {
+        let result = current_price - price_ordered;
+
+        if result.is_sign_negative() {
+            0.0.to_string()
+        } else {
+            (result / price_ordered * 100.0).to_string()
+        }
+    }
+
+    fn set_stop_loss(
+        &mut self,
+        buy_price: FutureOperation,
+        current_assest: CurrentPrice,
+        benefit: String,
+    ) {
+        let percentage_to_stop_loss = self
+            .percentages
+            .clone()
+            .into_iter()
+            .find(|p| p.pair == current_assest.pair)
+            .ok_or_else(|| eprintln!("pair does not exist in the database"))
+            .unwrap();
+
+        if percentage_to_stop_loss.new_stop_loss <= benefit {
+            let stop_loss_price = current_assest.price - (current_assest.price * 0.02);
+
+            self.kraken_api
+                .add_standard_order(
+                    &current_assest.pair,
+                    &get_operation_type(OperationType::SELL),
+                    &get_order_type(OrderType::StopLoss),
+                    &stop_loss_price.to_string(),
+                    "",
+                    &buy_price.quantity,
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                )
+                .unwrap();
+        }
+    }
+
     pub fn brain(&mut self) -> Result<String> {
         let buy_prices = self.get_buy_prices()?;
         let active_orders = self.get_active_orders()?.open;
@@ -201,16 +255,6 @@ mod tests {
     use super::KrakenOpr;
     use coinnect::kraken::KrakenCreds;
     use std::path::Path;
-
-    // #[test]
-    // fn should_get_buy_prices() {
-    //     let creds =
-    //         KrakenCreds::new_from_file("account_kraken", Path::new("keys.json").to_path_buf())
-    //             .unwrap();
-    //     let mut kraken_opr = KrakenOpr::new(creds);
-    //     let buy_prices = kraken_opr.get_buy_prices().unwrap();
-    //     println!("buy_prices: {:#?}", buy_prices);
-    // }
 
     #[test]
     fn should_get_price() {
