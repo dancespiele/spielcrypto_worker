@@ -164,11 +164,12 @@ impl KrakenOpr {
         }
     }
 
-    fn set_stop_loss(
+    fn set_new_stop_loss(
         &mut self,
         buy_price: FutureOperation,
         current_assest: CurrentPrice,
         benefit: String,
+        order_opt: Option<String>,
     ) {
         let percentage_to_stop_loss = self
             .percentages
@@ -178,9 +179,30 @@ impl KrakenOpr {
             .ok_or_else(|| eprintln!("pair does not exist in the database"))
             .unwrap();
 
-        if percentage_to_stop_loss.new_stop_loss <= benefit {
-            let stop_loss_price = current_assest.price - (current_assest.price * 0.02);
+        if let Some(order) = order_opt {
+            if percentage_to_stop_loss.next_stop_loss <= benefit {
+                let stop_loss_price = current_assest.price - (current_assest.price * 0.01);
 
+                self.kraken_api.cancel_open_order(&order).unwrap();
+                self.kraken_api
+                    .add_standard_order(
+                        &current_assest.pair,
+                        &get_operation_type(OperationType::SELL),
+                        &get_order_type(OrderType::StopLoss),
+                        &stop_loss_price.to_string(),
+                        "",
+                        &buy_price.quantity,
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                        "",
+                    )
+                    .unwrap();
+            }
+        } else if percentage_to_stop_loss.new_stop_loss <= benefit {
+            let stop_loss_price = current_assest.price - (current_assest.price * 0.02);
             self.kraken_api
                 .add_standard_order(
                     &current_assest.pair,
@@ -204,6 +226,7 @@ impl KrakenOpr {
         let buy_prices = self.get_buy_prices()?;
         let active_orders = self.get_active_orders()?.open;
         let current_prices: Vec<CurrentPrice> = buy_prices
+            .clone()
             .into_iter()
             .map(|fo| {
                 CurrentPrice::from((
@@ -223,6 +246,7 @@ impl KrakenOpr {
             .collect();
 
         let stop_loses: Vec<StopLossActive> = active_orders
+            .clone()
             .into_iter()
             .filter(|(_key, order)| {
                 order.description.operation_type == get_order_type(OrderType::StopLoss)
@@ -244,7 +268,32 @@ impl KrakenOpr {
             })
             .collect();
 
-        if stop_loses.is_empty() {}
+        current_prices.into_iter().for_each(move |cp| {
+            let buy_price_opt = buy_prices.clone().into_iter().find(|bp| bp.pair == cp.pair);
+
+            let active_order_opt = active_orders
+                .clone()
+                .into_iter()
+                .find(|(_key, order)| order.description.pair == cp.pair);
+
+            if let Some(buy_price) = buy_price_opt {
+                let benefit = self.calc_benefit(buy_price.buy_price, cp.price);
+
+                self.set_new_stop_loss(
+                    buy_price,
+                    cp,
+                    benefit,
+                    if let Some(active_order) = active_order_opt {
+                        let (key, _order) = active_order;
+                        Some(key)
+                    } else {
+                        None
+                    },
+                )
+            } else {
+                eprint!("Error or not found current assets");
+            }
+        });
 
         Ok("Ok".to_string())
     }
@@ -256,14 +305,14 @@ mod tests {
     use coinnect::kraken::KrakenCreds;
     use std::path::Path;
 
-    #[test]
-    fn should_get_price() {
-        let creds =
-            KrakenCreds::new_from_file("account_kraken", Path::new("keys.json").to_path_buf())
-                .unwrap();
-        let mut kraken_opr = KrakenOpr::new(creds);
+    // #[test]
+    // fn should_get_price() {
+    //     let creds =
+    //         KrakenCreds::new_from_file("account_kraken", Path::new("keys.json").to_path_buf())
+    //             .unwrap();
+    //     let mut kraken_opr = KrakenOpr::new(creds);
 
-        let price = kraken_opr.get_price("KAVAEUR").unwrap();
-        println!("price: {:#?}", price);
-    }
+    //     let price = kraken_opr.get_price("KAVAEUR").unwrap();
+    //     println!("price: {:#?}", price);
+    // }
 }
