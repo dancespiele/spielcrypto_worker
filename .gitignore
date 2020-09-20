@@ -1,3 +1,4 @@
 /target
 .env
 keys.json
+test_sled
