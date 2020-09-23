@@ -10,9 +10,12 @@ use std::path::Path;
 
 fn main() {
     dotenv().ok();
+
+    let multiples = get_multiples(2);
     // Create the `CronJob` object.
     let mut cron = CronJob::new("Dancespiele", on_cron);
-    cron.minutes("/2");
+    cron.seconds("0");
+    cron.minutes(&multiples);
     cron.start_job();
 }
 
@@ -27,4 +30,14 @@ fn on_cron(_name: &str) {
 
     let result = kraken_opr.brain().unwrap_or_else(|err| err.to_string());
     println!("{}", result);
+}
+
+fn get_multiples(mult: i32) -> String {
+    let mut multiples: Vec<String> = vec![];
+    for n in (0..60).filter(|r| r % mult == 0).collect::<Vec<i32>>() {
+        let value: String = n.to_string();
+        multiples.push(value);
+    }
+
+    multiples.join(",")
 }

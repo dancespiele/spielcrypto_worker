@@ -232,6 +232,8 @@ impl KrakenOpr {
     pub fn brain(&mut self) -> Result<String> {
         let buy_prices = self.get_buy_prices()?;
         let active_orders = self.get_active_orders()?.open;
+
+        let percentages = self.percentages.clone();
         let current_prices: Vec<CurrentPrice> = buy_prices
             .clone()
             .into_iter()
@@ -250,6 +252,7 @@ impl KrakenOpr {
                         }),
                 ))
             })
+            .filter(|c| percentages.clone().into_iter().any(|p| c.pair == p.pair))
             .collect();
 
         let stop_loses: Vec<StopLossActive> = active_orders
@@ -393,6 +396,12 @@ mod tests {
                 buy_price: 2.0,
                 operation_time: 160000,
                 quantity: String::from("1500"),
+            },
+            FutureOperation {
+                pair: String::from("CRVEUR"),
+                buy_price: 5.0,
+                operation_time: 160000,
+                quantity: String::from("3000"),
             },
         ]
     }
@@ -565,6 +574,7 @@ mod tests {
                     }),
                 ))
             })
+            .filter(|c| percentages.clone().into_iter().any(|p| c.pair == p.pair))
             .collect();
 
         let stop_loses: Vec<StopLossActive> = active_orders
