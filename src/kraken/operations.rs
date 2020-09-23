@@ -83,6 +83,12 @@ impl KrakenOpr {
                 current_balance
                     .get(&trade.pair.replace("EUR", ""))
                     .is_some()
+                    && current_balance
+                        .get(&trade.pair.replace("EUR", ""))
+                        .unwrap()
+                        .parse::<f32>()
+                        .unwrap()
+                        > 0.00001
                     && trade.trade_type == get_operation_type(OperationType::BUY)
             })
             .map(|(_key, trade)| {
@@ -277,7 +283,7 @@ impl KrakenOpr {
             })
             .collect();
 
-        current_prices.into_iter().for_each(move |cp| {
+        current_prices.clone().into_iter().for_each(move |cp| {
             let buy_price_opt = buy_prices.clone().into_iter().find(|bp| bp.pair == cp.pair);
 
             let active_order_opt = stop_loses
@@ -310,7 +316,7 @@ impl KrakenOpr {
             }
         });
 
-        Ok("Brain executed".to_string())
+        Ok(format!("Brain executed: \n{:#?}", current_prices))
     }
 }
 
