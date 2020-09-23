@@ -1,10 +1,10 @@
-use super::dtos::{CurrentPrice, FutureOperation, OpenOrders, StopLossActive, Trades};
+use super::dtos::{CurrentPrice, FutureOperation, Notify, OpenOrders, StopLossActive, Trades};
 use super::helpers::{get_operation_type, get_order_type, OperationType, OrderType};
+use super::notify::send_notification;
 use crate::db::{DancespieleDB, Percentage};
 use chrono::{TimeZone, Utc};
 use coinnect::error::{Error, ErrorKind, Result};
 use coinnect::kraken::{KrakenApi, KrakenCreds};
-use serde_json::{self, Map, Value};
 use std::collections::HashMap;
 
 pub struct KrakenOpr {
@@ -171,6 +171,8 @@ impl KrakenOpr {
         benefit: String,
         order_opt: Option<String>,
     ) {
+        let mut send_order = false;
+        let mut stop_loss_price = 0.0;
         let percentage_to_stop_loss = self
             .percentages
             .clone()
@@ -180,29 +182,28 @@ impl KrakenOpr {
             .unwrap();
 
         if let Some(order) = order_opt {
-            if percentage_to_stop_loss.next_stop_loss <= benefit {
-                let stop_loss_price = current_assest.price - (current_assest.price * 0.02);
+            if percentage_to_stop_loss
+                .next_stop_loss
+                .parse::<f32>()
+                .unwrap()
+                <= benefit.parse::<f32>().unwrap()
+            {
+                stop_loss_price = current_assest.price - (current_assest.price * 0.02);
 
                 self.kraken_api.cancel_open_order(&order).unwrap();
-                self.kraken_api
-                    .add_standard_order(
-                        &current_assest.pair,
-                        &get_operation_type(OperationType::SELL),
-                        &get_order_type(OrderType::StopLoss),
-                        &stop_loss_price.to_string(),
-                        "",
-                        &buy_price.quantity,
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                        "",
-                    )
-                    .unwrap();
+                send_order = true;
             }
-        } else if percentage_to_stop_loss.new_stop_loss <= benefit {
-            let stop_loss_price = current_assest.price - (current_assest.price * 0.02);
+        } else if percentage_to_stop_loss
+            .new_stop_loss
+            .parse::<f32>()
+            .unwrap()
+            <= benefit.parse::<f32>().unwrap()
+        {
+            stop_loss_price = current_assest.price - (current_assest.price * 0.02);
+            send_order = true;
+        }
+
+        if send_order {
             self.kraken_api
                 .add_standard_order(
                     &current_assest.pair,
@@ -219,6 +220,12 @@ impl KrakenOpr {
                     "",
                 )
                 .unwrap();
+
+            send_notification(Notify::from((
+                current_assest.pair,
+                stop_loss_price.to_string(),
+                benefit,
+            )));
         }
     }
 
@@ -293,13 +300,15 @@ impl KrakenOpr {
             }
         });
 
-        Ok("Ok".to_string())
+        Ok("Brain executed".to_string())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::super::dtos::{CurrentPrice, Description, FutureOperation, OpenOrders, Order};
+    use super::super::dtos::{
+        CurrentPrice, Description, FutureOperation, OpenOrders, Order, StopLossActive,
+    };
     use super::super::helpers::{get_operation_type, get_order_type, OperationType, OrderType};
     use crate::db::Percentage;
     use std::collections::HashMap;
@@ -383,50 +392,48 @@ mod tests {
 
     fn get_active_orders() -> OpenOrders {
         let mut order = HashMap::new();
-        order
-            .insert(
-                String::from("3344de344"),
-                Order {
-                    cost: String::from(""),
-                    fee: String::from("1.0"),
-                    limit_price: String::from(""),
-                    expiretm: 160000.0,
-                    misc: String::from(""),
-                    oflags: String::from(""),
-                    opentm: 160000.0,
+        order.insert(
+            String::from("3344de344"),
+            Order {
+                cost: String::from(""),
+                fee: String::from("1.0"),
+                limit_price: String::from(""),
+                expiretm: 160000.0,
+                misc: String::from(""),
+                oflags: String::from(""),
+                opentm: 160000.0,
+                price: String::from("0.3"),
+                refid: None,
+                status: String::from("ACTIVE"),
+                stop_price: String::from(""),
+                description: Description {
+                    close: String::from(""),
+                    order: String::from("3344de344"),
+                    operation_type: String::from("sell"),
+                    order_type: String::from("stop-loss"),
+                    leverage: String::from(""),
+                    pair: String::from("KAVAEUR"),
                     price: String::from("0.3"),
-                    refid: None,
-                    status: String::from("ACTIVE"),
-                    stop_price: String::from(""),
-                    description: Description {
-                        close: String::from(""),
-                        order: String::from("3344de344"),
-                        operation_type: String::from("sell"),
-                        order_type: String::from("stop-loss"),
-                        leverage: String::from(""),
-                        pair: String::from("KAVAEUR"),
-                        price: String::from("0.3"),
-                        price2: String::from(""),
-                    },
-                    userref: 2123444,
-                    vol: String::from("1500"),
-                    vol_exec: String::from(""),
+                    price2: String::from(""),
                 },
-            )
-            .unwrap();
+                userref: 2123444,
+                vol: String::from("1500"),
+                vol_exec: String::from(""),
+            },
+        );
 
         OpenOrders { open: order }
     }
 
     fn get_price(pair: &str) -> String {
         if pair == "KAVAEUR" {
-            "0.35".to_string()
+            "3.5".to_string()
         } else {
             "0.40".to_string()
         }
     }
 
-    fn set_stop_loss(
+    fn add_stop_loss(
         buy_price: FutureOperation,
         current_assest: CurrentPrice,
         benefit: String,
@@ -440,7 +447,12 @@ mod tests {
             .unwrap();
 
         if let Some(order) = order_opt {
-            if percentage_to_stop_loss.next_stop_loss <= benefit {
+            if percentage_to_stop_loss
+                .next_stop_loss
+                .parse::<f32>()
+                .unwrap()
+                <= benefit.parse::<f32>().unwrap()
+            {
                 let stop_loss_price = current_assest.price - (current_assest.price * 0.02);
                 cancel_open_order(&order);
 
@@ -477,7 +489,12 @@ mod tests {
                     }
                 );
             }
-        } else if percentage_to_stop_loss.new_stop_loss <= benefit {
+        } else if percentage_to_stop_loss
+            .new_stop_loss
+            .parse::<f32>()
+            .unwrap()
+            <= benefit.parse::<f32>().unwrap()
+        {
             let stop_loss_price = current_assest.price - (current_assest.price * 0.02);
             let order = add_standard_order(
                 &current_assest.pair,
@@ -514,6 +531,85 @@ mod tests {
         }
     }
 
+    fn brain() {
+        let buy_prices = get_buy_prices();
+        let active_orders = get_active_orders().open;
+        let percentages = vec![
+            Percentage {
+                new_stop_loss: String::from("40.0"),
+                next_stop_loss: String::from("14.0"),
+                pair: String::from("KAVAEUR"),
+            },
+            Percentage {
+                new_stop_loss: String::from("30.0"),
+                next_stop_loss: String::from("5.0"),
+                pair: String::from("OXTEUR"),
+            },
+        ];
+        let current_prices: Vec<CurrentPrice> = buy_prices
+            .clone()
+            .into_iter()
+            .map(|fo| {
+                CurrentPrice::from((
+                    fo.pair.clone(),
+                    get_price(&fo.pair).parse::<f32>().unwrap_or_else(|err| {
+                        println!("Error: {}", err);
+                        0.0000
+                    }),
+                ))
+            })
+            .collect();
+
+        let stop_loses: Vec<StopLossActive> = active_orders
+            .into_iter()
+            .filter(|(_key, order)| {
+                order.description.order_type == get_order_type(OrderType::StopLoss)
+                    && order.description.operation_type == get_operation_type(OperationType::SELL)
+            })
+            .map(|(key, order)| {
+                StopLossActive::from((
+                    key,
+                    order.price.parse().unwrap_or_else(|err| {
+                        println!("Error: {}", err);
+                        0.0000
+                    }),
+                    current_prices
+                        .clone()
+                        .into_iter()
+                        .find(|cp| cp.pair == order.description.pair)
+                        .unwrap(),
+                ))
+            })
+            .collect();
+
+        current_prices.into_iter().for_each(move |cp| {
+            let buy_price_opt = buy_prices.clone().into_iter().find(|bp| bp.pair == cp.pair);
+
+            let active_order_opt = stop_loses
+                .clone()
+                .into_iter()
+                .find(|order| order.pair == cp.pair);
+
+            if let Some(buy_price) = buy_price_opt {
+                let benefit = calc_benefit(buy_price.buy_price, cp.price);
+
+                add_stop_loss(
+                    buy_price,
+                    cp,
+                    benefit,
+                    if let Some(active_order) = active_order_opt {
+                        Some(active_order.order)
+                    } else {
+                        None
+                    },
+                    percentages.clone(),
+                )
+            } else {
+                eprint!("Error or not found current assets");
+            }
+        });
+    }
+
     #[test]
     fn should_calculate_benefit() {
         let benefit = calc_benefit(0.29, 0.4);
@@ -548,7 +644,7 @@ mod tests {
             },
         ];
 
-        set_stop_loss(
+        add_stop_loss(
             buy_price,
             current_assest,
             String::from("37.93104"),
@@ -584,12 +680,35 @@ mod tests {
             },
         ];
 
-        set_stop_loss(
+        add_stop_loss(
             buy_price,
             current_assest,
             String::from("16.66666"),
             Some(String::from("3344de344")),
             percentages,
         );
+    }
+
+    #[test]
+    fn should_brain_play_in_kraken() {
+        brain();
+    }
+
+    #[test]
+    fn should_compare_numbers_string() {
+        if "2.5".parse::<f32>().unwrap() < "2.6".parse::<f32>().unwrap() {
+            println!("works 1");
+        }
+        if "3.43".parse::<f32>().unwrap() > "3.41".parse::<f32>().unwrap() {
+            println!("works 2");
+        }
+
+        if "4.34".parse::<f32>().unwrap() > "10.32".parse::<f32>().unwrap() {
+            println!("works 3");
+        }
+
+        if "34.443".parse::<f32>().unwrap() > "100.34".parse::<f32>().unwrap() {
+            panic!("should not work");
+        }
     }
 }

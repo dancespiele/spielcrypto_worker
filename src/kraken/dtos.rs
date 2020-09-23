@@ -1,7 +1,4 @@
-use serde::{
-    de::{value::SeqDeserializer, Error, Visitor},
-    Deserialize, Serialize,
-};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -122,4 +119,32 @@ impl From<(String, f32, CurrentPrice)> for StopLossActive {
             current_price: current_price.price,
         }
     }
+}
+
+#[derive(Serialize)]
+pub struct Notify {
+    pub pair: String,
+    pub price: String,
+    pub benefit: String,
+}
+
+impl From<(String, String, String)> for Notify {
+    fn from(notify: (String, String, String)) -> Self {
+        let (pair, price, benefit) = notify;
+
+        Self {
+            pair,
+            price,
+            benefit,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub sub: String,
+    pub iss: String,
+    pub email: String,
+    pub iat: i64,
+    pub exp: i64,
 }

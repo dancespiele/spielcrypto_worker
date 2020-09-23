@@ -3,22 +3,27 @@ mod kraken;
 
 use coinnect::kraken::KrakenCreds;
 use cronjob::CronJob;
+use dotenv::dotenv;
 use kraken::KrakenOpr;
+use std::env;
 use std::path::Path;
 
 fn main() {
+    dotenv().ok();
     // Create the `CronJob` object.
-    let mut cron = CronJob::new("Test Kraken", on_cron);
+    let mut cron = CronJob::new("Dancespiele", on_cron);
     cron.start_job();
 }
 
 // Our cronjob handler.
 fn on_cron(_name: &str) {
-    // let cred =
-    //     KrakenCreds::new_from_file("account_kraken", Path::new("keys.json").to_path_buf()).unwrap();
+    let sled_url = env::var("SLED_URL").expect("SLED_URL must be set");
 
-    // let mut kraken_opr = KrakenOpr::new(cred);
+    let cred =
+        KrakenCreds::new_from_file("account_kraken", Path::new("keys.json").to_path_buf()).unwrap();
 
-    // let kraken_open_order = kraken_opr.get_buy_prices();
-    println!("Hello dancespiele");
+    let mut kraken_opr = KrakenOpr::new(cred, &sled_url);
+
+    let result = kraken_opr.brain().unwrap_or_else(|err| err.to_string());
+    println!("{}", result);
 }

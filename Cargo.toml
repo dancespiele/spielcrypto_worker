@@ -15,3 +15,5 @@ serde_json = "1.0"
 chrono = {version="0.4", features= ["serde", "rustc-serialize"]}
 sled="0.34"
 dotenv="0.15"
+curl="0.4"
+jsonwebtoken = "7.2"
