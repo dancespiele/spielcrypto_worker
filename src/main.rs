@@ -12,6 +12,7 @@ fn main() {
     dotenv().ok();
     // Create the `CronJob` object.
     let mut cron = CronJob::new("Dancespiele", on_cron);
+    cron.minutes("/2");
     cron.start_job();
 }
 

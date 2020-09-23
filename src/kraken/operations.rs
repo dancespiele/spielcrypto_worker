@@ -283,7 +283,14 @@ impl KrakenOpr {
                 .find(|order| order.pair == cp.pair);
 
             if let Some(buy_price) = buy_price_opt {
-                let benefit = self.calc_benefit(buy_price.buy_price, cp.price);
+                let benefit = self.calc_benefit(
+                    if let Some(active_order) = active_order_opt.clone() {
+                        active_order.price
+                    } else {
+                        buy_price.buy_price
+                    },
+                    cp.price,
+                );
 
                 self.add_stop_loss(
                     buy_price,
@@ -591,7 +598,14 @@ mod tests {
                 .find(|order| order.pair == cp.pair);
 
             if let Some(buy_price) = buy_price_opt {
-                let benefit = calc_benefit(buy_price.buy_price, cp.price);
+                let benefit = calc_benefit(
+                    if let Some(active_order) = active_order_opt.clone() {
+                        active_order.price
+                    } else {
+                        buy_price.buy_price
+                    },
+                    cp.price,
+                );
 
                 add_stop_loss(
                     buy_price,
