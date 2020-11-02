@@ -10,10 +10,11 @@ use std::collections::HashMap;
 pub struct KrakenOpr {
     kraken_api: KrakenApi,
     percentages: Vec<Percentage>,
+    trading_agreement: String,
 }
 
 impl KrakenOpr {
-    pub fn new(cred: KrakenCreds, db_url: &str) -> Self {
+    pub fn new(cred: KrakenCreds, db_url: &str, trading_agreement: String) -> Self {
         let kraken_api = KrakenApi::new(cred).unwrap();
         let mut dancespiele_db = DancespieleDB::new(db_url);
         let percentages = dancespiele_db.fetch_coins_percentages_stop_loss().unwrap();
@@ -21,6 +22,7 @@ impl KrakenOpr {
         Self {
             kraken_api,
             percentages,
+            trading_agreement,
         }
     }
 
@@ -224,6 +226,7 @@ impl KrakenOpr {
                     "",
                     "",
                     "",
+                    &self.trading_agreement,
                 )
                 .unwrap();
 

@@ -14,19 +14,24 @@ fn main() {
     let multiples = get_multiples(2);
     // Create the `CronJob` object.
     let mut cron = CronJob::new("Dancespiele", on_cron);
-    cron.seconds("0");
-    cron.minutes(&multiples);
+    cron.seconds(&multiples);
+    // cron.minutes(&multiples);
     cron.start_job();
 }
 
 // Our cronjob handler.
 fn on_cron(_name: &str) {
     let sled_url = env::var("SLED_URL").expect("SLED_URL must be set");
+    let trading_agreement = if let Ok(trading_agreement) = env::var("TRADING_AGREEMENT") {
+        trading_agreement
+    } else {
+        String::from("")
+    };
 
     let cred =
         KrakenCreds::new_from_file("account_kraken", Path::new("keys.json").to_path_buf()).unwrap();
 
-    let mut kraken_opr = KrakenOpr::new(cred, &sled_url);
+    let mut kraken_opr = KrakenOpr::new(cred, &sled_url, trading_agreement);
 
     let result = kraken_opr.brain().unwrap_or_else(|err| err.to_string());
     println!("{}", result);

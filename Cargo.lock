@@ -154,8 +154,7 @@ dependencies = [
 [[package]]
 name = "coinnect"
 version = "0.5.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47a6b2b7cbaf8d97eefc82a192daea84a9a2485bd47d422e482ad80077c6e228"
+source = "git+https://github.com/spielrs/coinnect.git?branch=tradin_agreement#237c90470e8dfad9a38d1f6901996238e26d0e88"
 dependencies = [
  "bidir-map",
  "bigdecimal",
