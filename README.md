@@ -14,11 +14,13 @@ For example imagine that you have `ETH` in [Kraken](https://www.kraken.com/) and
 
 ## How to run the application
 
-1. `git clone https://github.com/dancespiele/dancaspiele_worker.git`
+1. Install [Dancespiele API](https://github.com/dancespiele/dancespiele_api)
 
-2. `cd dancespiele_worker`
+2. `git clone https://github.com/dancespiele/dancaspiele_worker.git`
 
-2. set the .env file:
+3. `cd dancespiele_worker`
+
+4. set the .env file:
 
 ```
 SLED_URL=[PATH WHERE YOU WANT THE SLED DB FILE. NOTICE THAT THE DB IS SHARING WITH Dancespiele API]
@@ -28,11 +30,11 @@ EMAIL=[YOUR EMAIL TO GET THE NOTIFICATION OF THE ORDER]
 TRADING_AGREEMENT=agree // FOR RESIDENTS IN GERMAN 
 ```
 
-3. execute:
+5. execute:
 
 `cargo run`
 
-4. Enjoy!
+6. Enjoy!
 
 **Note:** Dancespiele worker will check the coin prices every 2 minutes in case that it add a stop limit order you will be notified by email if Dancespiele API and your email server are correctly set
 
