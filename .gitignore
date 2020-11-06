@@ -2,3 +2,5 @@
 .env
 keys.json
 test_sled
+.vscode
+cargo.lock
