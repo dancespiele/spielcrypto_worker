@@ -51,7 +51,7 @@ TRADING_AGREEMENT=agree // FOR RESIDENTS IN GERMAN
 **Note:** Dancespiele worker will check the coin prices every 2 minutes in case that it add a stop limit order you will be notified by email if Dancespiele API and your email server are correctly set
 
 ## Do you like Dancespiele apps?
-If you like Dancespiele apps, help us supporting the projects:
+If you like Dancespiele apps, help me supporting the projects:
 - [Gitcoin](https://gitcoin.co/grants/1539/dancespiele)
 - BAT rewards in case that you use [Brave Browser](https://brave.com/)
 - [Github Sponsors](https://github.com/sponsors/dancespiele)
