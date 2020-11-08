@@ -42,11 +42,11 @@ TRADING_AGREEMENT=agree // FOR RESIDENTS IN GERMAN
 }
 ```
 
-5. execute:
+6. execute:
 
 `cargo run`
 
-6. Enjoy!
+7. Enjoy!
 
 **Note:** Dancespiele worker will check the coin prices every 2 minutes in case that it add a stop limit order you will be notified by email if Dancespiele API and your email server are correctly set
 
