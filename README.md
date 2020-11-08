@@ -20,7 +20,7 @@ For example imagine that you have `ETH` in [Kraken](https://www.kraken.com/) and
 
 3. `cd dancespiele_worker`
 
-4. set the .env file:
+4. add the .env file:
 
 ```
 SLED_URL=[PATH WHERE YOU WANT THE SLED DB FILE. NOTICE THAT THE DB IS SHARING WITH Dancespiele API]
@@ -30,7 +30,7 @@ EMAIL=[YOUR EMAIL TO GET THE NOTIFICATION OF THE ORDER]
 TRADING_AGREEMENT=agree // FOR RESIDENTS IN GERMAN 
 ```
 
-5. set the keys.json file
+5. add the keys.json file
 
 ```json
 {
