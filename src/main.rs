@@ -14,8 +14,8 @@ fn main() {
     let multiples = get_multiples(2);
     // Create the `CronJob` object.
     let mut cron = CronJob::new("Dancespiele", on_cron);
-    cron.seconds(&multiples);
-    // cron.minutes(&multiples);
+    cron.seconds("0");
+    cron.minutes(&multiples);
     cron.start_job();
 }
 
