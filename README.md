@@ -40,7 +40,10 @@ TRADING_AGREEMENT=agree // FOR RESIDENTS IN GERMAN
 
 ## Do you like Dancespiele apps?
 If you like Dancespiele apps, help us supporting the projects:
+- [Gitcoin](https://gitcoin.co/grants/1539/dancespiele)
+- BAT rewards in case that you use [Brave Browser](https://brave.com/)
 - [Github Sponsors](https://github.com/sponsors/dancespiele)
+- Burst coins to the address BURST-DPN6-2AT3-FCRL-9BBKG
 
 ## License
 Dancespiele Worker is [LICENSE PARITY](LICENSE-PARITY.md) and [LICENSE PATRON](LICENSE-PATRON.md) licensed. If you need a comercial license sponsor to Dancespiele in the right tier or contact to `spielcrypto@gmail.com`
