@@ -30,6 +30,18 @@ EMAIL=[YOUR EMAIL TO GET THE NOTIFICATION OF THE ORDER]
 TRADING_AGREEMENT=agree // FOR RESIDENTS IN GERMAN 
 ```
 
+5. set the keys.json file
+
+```json
+{
+    "account_kraken": {
+        "exchange"  : "kraken",
+        "api_key"   : "REMOVE THIS FOR YOUR KRAKEN API KEY",
+        "api_secret": "REMOVE THIS FOR YOUR KRAKEN API SECRET"
+    }
+}
+```
+
 5. execute:
 
 `cargo run`
