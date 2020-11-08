@@ -148,3 +148,26 @@ pub struct Claims {
     pub iat: i64,
     pub exp: i64,
 }
+
+#[derive(Clone, Debug)]
+pub struct Info {
+    pub pair: String,
+    pub current_price: f32,
+    pub price_bought: f32,
+    pub benefit: String,
+    pub current_stop_loss: String,
+}
+
+impl From<(CurrentPrice, f32, String, String)> for Info {
+    fn from(info: (CurrentPrice, f32, String, String)) -> Self {
+        let (current_price, price_bought, benefit, current_stop_loss) = info;
+
+        Self {
+            pair: current_price.pair,
+            current_price: current_price.price,
+            price_bought,
+            benefit,
+            current_stop_loss,
+        }
+    }
+}

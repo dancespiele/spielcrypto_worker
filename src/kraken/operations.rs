@@ -1,4 +1,6 @@
-use super::dtos::{CurrentPrice, FutureOperation, Notify, OpenOrders, StopLossActive, Trades};
+use super::dtos::{
+    CurrentPrice, FutureOperation, Info, Notify, OpenOrders, StopLossActive, Trades,
+};
 use super::helpers::{get_operation_type, get_order_type, OperationType, OrderType};
 use super::notify::send_notification;
 use crate::db::{DancespieleDB, Percentage};
@@ -238,6 +240,53 @@ impl KrakenOpr {
         }
     }
 
+    pub fn get_info(
+        &mut self,
+        current_prices: Vec<CurrentPrice>,
+        active_orders: Vec<StopLossActive>,
+        buy_prices: Vec<FutureOperation>,
+    ) -> Vec<Info> {
+        current_prices
+            .into_iter()
+            .map(|current_price| {
+                let active_order_opt = active_orders
+                    .clone()
+                    .into_iter()
+                    .find(|sl| sl.pair == current_price.pair);
+                let buy_price = buy_prices
+                    .clone()
+                    .into_iter()
+                    .find(|bp| bp.pair == current_price.pair);
+
+                let benefit = self.calc_benefit(
+                    if let Some(active_order) = active_order_opt.clone() {
+                        active_order.price
+                    } else if let Some(bp) = buy_price.clone() {
+                        bp.buy_price
+                    } else {
+                        0.0
+                    },
+                    current_price.price,
+                );
+
+                Info::from((
+                    current_price,
+                    if let Some(bp) = buy_price {
+                        bp.buy_price
+                    } else {
+                        0.0
+                    },
+                    benefit,
+                    if let Some(sl) = active_order_opt {
+                        sl.order
+                    } else {
+                        "".to_string()
+                    },
+                ))
+            })
+            .collect::<Vec<Info>>()
+    }
+
     pub fn brain(&mut self) -> Result<String> {
         let buy_prices = self.get_buy_prices()?;
         let active_orders = self.get_active_orders()?.open;
@@ -264,7 +313,7 @@ impl KrakenOpr {
             .filter(|c| percentages.clone().into_iter().any(|p| c.pair == p.pair))
             .collect();
 
-        let stop_loses: Vec<StopLossActive> = active_orders
+        let stop_losses: Vec<StopLossActive> = active_orders
             .into_iter()
             .filter(|(_key, order)| {
                 order.description.order_type == get_order_type(OrderType::StopLoss)
@@ -285,11 +334,13 @@ impl KrakenOpr {
                 ))
             })
             .collect();
+        let stop_losses_copy = stop_losses.clone();
+        let buy_prices_copy = buy_prices.clone();
 
-        current_prices.clone().into_iter().for_each(move |cp| {
+        current_prices.clone().into_iter().for_each(|cp| {
             let buy_price_opt = buy_prices.clone().into_iter().find(|bp| bp.pair == cp.pair);
 
-            let active_order_opt = stop_loses
+            let active_order_opt = stop_losses
                 .clone()
                 .into_iter()
                 .find(|order| order.pair == cp.pair);
@@ -319,7 +370,9 @@ impl KrakenOpr {
             }
         });
 
-        Ok(format!("Brain executed: \n{:#?}", current_prices))
+        let info = self.get_info(current_prices, stop_losses_copy, buy_prices_copy);
+
+        Ok(format!("Brain executed: \n{:#?}", info))
     }
 }
 

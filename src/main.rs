@@ -1,5 +1,5 @@
 mod db;
-mod kraken;
+pub mod kraken;
 
 use coinnect::kraken::KrakenCreds;
 use cronjob::CronJob;
