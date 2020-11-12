@@ -58,8 +58,9 @@ If you like Dancespiele apps, help me supporting the projects:
 - Burst coins to the address BURST-DPN6-2AT3-FCRL-9BBKG
 
 ## Do you want or you need a feature that is not implemented yet?
+
 You can have the feature that you wish creating the issue in the repository and funding it [here](https://issuehunt.io/r/dancespiele/dancaspiele_worker).
-How much bigger is your fund more priority will be your feature 
+**How much bigger is your fund more priority will be your feature!**
 
 ## License
 Dancespiele Worker is [LICENSE PARITY](LICENSE-PARITY.md) and [LICENSE PATRON](LICENSE-PATRON.md) licensed. If you need a comercial license sponsor to Dancespiele in the right tier or contact to `spielcrypto@gmail.com`
