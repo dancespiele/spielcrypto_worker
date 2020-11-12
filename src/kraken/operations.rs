@@ -4,7 +4,7 @@ use super::dtos::{
 use super::helpers::{get_operation_type, get_order_type, OperationType, OrderType};
 use super::notify::send_notification;
 use crate::db::{DancespieleDB, Percentage};
-use chrono::{TimeZone, Utc};
+use chrono::{Local, TimeZone, Utc};
 use coinnect::error::{Error, ErrorKind, Result};
 use coinnect::kraken::{KrakenApi, KrakenCreds};
 use std::collections::HashMap;
@@ -278,7 +278,7 @@ impl KrakenOpr {
                     },
                     benefit,
                     if let Some(sl) = active_order_opt {
-                        sl.order
+                        sl.price.to_string()
                     } else {
                         "".to_string()
                     },
@@ -372,17 +372,20 @@ impl KrakenOpr {
 
         let info = self.get_info(current_prices, stop_losses_copy, buy_prices_copy);
 
-        Ok(format!("Brain executed: \n{:#?}", info))
+        let current_time = Local::now().format("%d %b %Y %H:%M:%S");
+
+        Ok(format!("{} Brain executed: \n{:#?}", current_time, info))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::super::dtos::{
-        CurrentPrice, Description, FutureOperation, OpenOrders, Order, StopLossActive,
+        CurrentPrice, Description, FutureOperation, Info, OpenOrders, Order, StopLossActive,
     };
     use super::super::helpers::{get_operation_type, get_order_type, OperationType, OrderType};
     use crate::db::Percentage;
+    use chrono::Local;
     use std::collections::HashMap;
 
     #[derive(Debug, PartialEq)]
@@ -399,6 +402,7 @@ mod tests {
         expiretm: String,
         userref: String,
         validate: String,
+        trading_agreement: String,
     }
 
     fn calc_benefit(price_ordered: f32, current_price: f32) -> String {
@@ -428,6 +432,7 @@ mod tests {
         expiretm: &str,
         userref: &str,
         validate: &str,
+        trading_agreement: &str,
     ) -> OrderSent {
         OrderSent {
             pair: pair.to_string(),
@@ -442,6 +447,7 @@ mod tests {
             expiretm: expiretm.to_string(),
             userref: userref.to_string(),
             validate: validate.to_string(),
+            trading_agreement: trading_agreement.to_string(),
         }
     }
 
@@ -547,6 +553,7 @@ mod tests {
                     "",
                     "",
                     "",
+                    "",
                 );
 
                 assert_eq!(
@@ -564,6 +571,7 @@ mod tests {
                         expiretm: String::from(""),
                         userref: String::from(""),
                         validate: String::from(""),
+                        trading_agreement: String::from("")
                     }
                 );
             }
@@ -587,6 +595,7 @@ mod tests {
                 "",
                 "",
                 "",
+                "",
             );
 
             assert_eq!(
@@ -604,9 +613,56 @@ mod tests {
                     expiretm: String::from(""),
                     userref: String::from(""),
                     validate: String::from(""),
+                    trading_agreement: String::from("")
                 }
             );
         }
+    }
+
+    pub fn get_info(
+        current_prices: Vec<CurrentPrice>,
+        active_orders: Vec<StopLossActive>,
+        buy_prices: Vec<FutureOperation>,
+    ) -> Vec<Info> {
+        current_prices
+            .into_iter()
+            .map(|current_price| {
+                let active_order_opt = active_orders
+                    .clone()
+                    .into_iter()
+                    .find(|sl| sl.pair == current_price.pair);
+                let buy_price = buy_prices
+                    .clone()
+                    .into_iter()
+                    .find(|bp| bp.pair == current_price.pair);
+
+                let benefit = calc_benefit(
+                    if let Some(active_order) = active_order_opt.clone() {
+                        active_order.price
+                    } else if let Some(bp) = buy_price.clone() {
+                        bp.buy_price
+                    } else {
+                        0.0
+                    },
+                    current_price.price,
+                );
+
+                Info::from((
+                    current_price,
+                    if let Some(bp) = buy_price {
+                        bp.buy_price
+                    } else {
+                        0.0
+                    },
+                    benefit,
+                    if let Some(sl) = active_order_opt {
+                        sl.price.to_string()
+                    } else {
+                        "".to_string()
+                    },
+                ))
+            })
+            .collect::<Vec<Info>>()
     }
 
     fn brain() {
@@ -639,7 +695,7 @@ mod tests {
             .filter(|c| percentages.clone().into_iter().any(|p| c.pair == p.pair))
             .collect();
 
-        let stop_loses: Vec<StopLossActive> = active_orders
+        let stop_losses: Vec<StopLossActive> = active_orders
             .into_iter()
             .filter(|(_key, order)| {
                 order.description.order_type == get_order_type(OrderType::StopLoss)
@@ -661,10 +717,13 @@ mod tests {
             })
             .collect();
 
-        current_prices.into_iter().for_each(move |cp| {
+        let stop_losses_copy = stop_losses.clone();
+        let buy_prices_copy = buy_prices.clone();
+
+        current_prices.clone().into_iter().for_each(move |cp| {
             let buy_price_opt = buy_prices.clone().into_iter().find(|bp| bp.pair == cp.pair);
 
-            let active_order_opt = stop_loses
+            let active_order_opt = stop_losses
                 .clone()
                 .into_iter()
                 .find(|order| order.pair == cp.pair);
@@ -694,6 +753,12 @@ mod tests {
                 eprint!("Error or not found current assets");
             }
         });
+
+        let info = get_info(current_prices, stop_losses_copy, buy_prices_copy);
+
+        let current_time = Local::now().format("%d %b %Y %H:%M:%S");
+
+        println!("{} Brain executed: \n{:#?}", current_time, info);
     }
 
     #[test]
