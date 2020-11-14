@@ -4,6 +4,7 @@ use super::dtos::{
 use super::helpers::{get_operation_type, get_order_type, OperationType, OrderType};
 use super::notify::send_notification;
 use crate::db::{DancespieleDB, Percentage};
+use crate::utils::substract_pair;
 use chrono::{Local, TimeZone, Utc};
 use coinnect::error::{Error, ErrorKind, Result};
 use coinnect::kraken::{KrakenApi, KrakenCreds};
@@ -84,11 +85,10 @@ impl KrakenOpr {
         let trades_to_operate: Vec<FutureOperation> = trades_active
             .into_iter()
             .filter(|(_key, trade)| {
-                current_balance
-                    .get(&trade.pair.replace("EUR", ""))
-                    .is_some()
+                let currency = substract_pair(&trade.pair);
+                current_balance.get(&currency).is_some()
                     && current_balance
-                        .get(&trade.pair.replace("EUR", ""))
+                        .get(&currency)
                         .unwrap()
                         .parse::<f32>()
                         .unwrap()
@@ -96,10 +96,8 @@ impl KrakenOpr {
                     && trade.trade_type == get_operation_type(OperationType::BUY)
             })
             .map(|(_key, trade)| {
-                let quantity = current_balance
-                    .get(&trade.pair.replace("EUR", ""))
-                    .unwrap()
-                    .to_string();
+                let currency = substract_pair(&trade.pair);
+                let quantity = current_balance.get(&currency).unwrap().to_string();
                 FutureOperation::from((trade, quantity))
             })
             .fold(&mut vec![], |acc: &mut Vec<FutureOperation>, curr| {
