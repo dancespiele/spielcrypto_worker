@@ -1,6 +1,6 @@
 # Dancespiele Worker
 
-Dancespiele Worker is an cron job task application that add stop loss order in exchange crytoconcurrency platforms.
+Dancespiele Worker is an cron job task application that add stop loss order in exchange cryptoconcurrency platforms.
 
 ## How it works
 
