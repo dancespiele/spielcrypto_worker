@@ -64,3 +64,5 @@ You can have the feature that you wish creating the issue in the repository and 
 
 ## License
 Dancespiele Worker is [LICENSE PARITY](LICENSE-PARITY.md) and [LICENSE PATRON](LICENSE-PATRON.md) licensed. If you need a comercial license sponsor to Dancespiele in the right tier or contact to `spielcrypto@gmail.com`
+
+**Warning:** Each functionality has unit test to avoid bugs however the author of this app is not responsible for all the issues and losses that can happen using it. Please, read the licenses.
