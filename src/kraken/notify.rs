@@ -1,53 +1,33 @@
-use super::dtos::{Claims, Notify};
-use chrono::prelude::*;
-use chrono::Duration;
-use curl::easy::{Easy, List};
-use jsonwebtoken::{encode, EncodingKey, Header};
+use super::dtos::{Notify, NotifyEmail};
+use crate::db::DancespieleDB;
+use celery::TaskResult;
 use std::env;
-use std::io::Read;
 
-pub fn send_notification(notify: Notify) {
-    let api_url = env::var("API_URL").expect("API_URL must be set");
-    let token = create_system_token();
-    let body = serde_json::to_string(&notify).unwrap();
-    let mut data = body.as_bytes();
-    let mut list = List::new();
-    list.append("Content-Type: application/json").unwrap();
-    list.append(&format!("Authorization: {}", token)).unwrap();
+#[celery::task]
+fn add_stop_loss(notify: Notify) -> TaskResult<NotifyEmail> {
+    let email = env::var("EMAIL").expect("Email should be set");
 
-    let mut easy = Easy::new();
-    easy.post(true).unwrap();
-    easy.url(&format!("{}/mail/", api_url)).unwrap();
-    easy.post_fields_copy(data).unwrap();
-    easy.http_headers(list).unwrap();
-    let mut transfer = easy.transfer();
-    transfer
-        .read_function(|buf| Ok(data.read(buf).unwrap_or(0)))
-        .unwrap();
-    transfer.perform().unwrap();
+    Ok(NotifyEmail::from((notify, email)))
 }
 
-fn create_system_token() -> String {
-    let email = env::var("EMAIL").expect("EMAIL must be set");
-    let secret = env::var("SECRET").expect("SECRET must be set");
-    let expire_token: DateTime<Utc> = Utc::now() + Duration::days(1);
+pub async fn send_notification(notify: Notify, db_url: String) {
+    let notification = celery::app!(
+        broker = AMQP { std::env::var("AMPQ_ADDR").unwrap_or_else(|_| "amqp://127.0.0.1:5672".into())},
+        tasks = [
+            add_stop_loss,
+        ],
+        task_routes = [
+            "add_stop_loss" => "stop_loss_queue",
+    ]);
 
-    let claims = Claims {
-        sub: String::from("SYSTEM"),
-        iss: String::from("system"),
-        email,
-        iat: Utc::now().timestamp(),
-        exp: expire_token.timestamp(),
-    };
+    let task_id = notification
+        .send_task(add_stop_loss::new(notify))
+        .await
+        .unwrap();
 
-    let token = encode(
-        &Header::default(),
-        &claims,
-        &EncodingKey::from_secret(secret.as_ref()),
-    )
-    .unwrap();
-
-    token
+    let notification_response = DancespieleDB::find_task_id(task_id, &db_url)
+        .unwrap_or_else(|_| String::from("Error to send notification"));
+    println!("Notification: {}", notification_response);
 }
 
 #[cfg(test)]
@@ -55,16 +35,19 @@ mod tests {
     use super::super::dtos::Notify;
     use super::send_notification;
     use dotenv::dotenv;
+    use std::env;
 
     #[test]
     fn should_send_notification() {
         dotenv().ok();
+        let sled_url = env::var("SLED_URL_TEST").expect("SLED_URL_TEST must be set");
+
         let notify = Notify {
             pair: "KAVAEUR".to_string(),
             price: "4.0".to_string(),
             benefit: "40.0".to_string(),
         };
 
-        send_notification(notify);
+        send_notification(notify, sled_url);
     }
 }

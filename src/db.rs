@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sled::{Db, Error, IVec, Result};
 use std::str;
+use std::{thread, time};
 
 pub struct DancespieleDB {
     db: Db,
@@ -31,6 +32,39 @@ impl DancespieleDB {
         let response: Vec<Percentage> = serde_json::from_str(percentages_string).unwrap();
 
         Ok(response)
+    }
+
+    pub fn find_task_id(task_id: String, db_url: &str) -> Result<String> {
+        let mut index = 0;
+        let response: IVec;
+        let delay = time::Duration::from_secs(1);
+
+        loop {
+            let db_result = sled::open(db_url);
+
+            if let Ok(db) = db_result {
+                let response_result = db.get(task_id.clone());
+
+                if let Ok(response_option) = response_result {
+                    if let Some(res) = response_option {
+                        response = res;
+                        break;
+                    }
+                }
+            }
+
+            index += 1;
+
+            if index > 10 {
+                return Err(Error::Unsupported(String::from("Cannot retrieve the task")));
+            }
+
+            thread::sleep(delay);
+        }
+
+        let message_body = str::from_utf8(&response).unwrap();
+
+        Ok(message_body.to_string())
     }
 }
 

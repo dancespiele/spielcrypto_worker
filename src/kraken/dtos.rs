@@ -121,7 +121,7 @@ impl From<(String, f32, CurrentPrice)> for StopLossActive {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Notify {
     pub pair: String,
     pub price: String,
@@ -136,6 +136,27 @@ impl From<(String, String, String)> for Notify {
             pair,
             price,
             benefit,
+        }
+    }
+}
+
+#[derive(Serialize, Debug)]
+pub struct NotifyEmail {
+    pub pair: String,
+    pub price: String,
+    pub benefit: String,
+    pub email: String,
+}
+
+impl From<(Notify, String)> for NotifyEmail {
+    fn from(notify: (Notify, String)) -> Self {
+        let (content, email) = notify;
+
+        Self {
+            price: content.price,
+            pair: content.pair,
+            benefit: content.benefit,
+            email,
         }
     }
 }

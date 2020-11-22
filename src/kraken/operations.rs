@@ -14,6 +14,7 @@ pub struct KrakenOpr {
     kraken_api: KrakenApi,
     percentages: Vec<Percentage>,
     trading_agreement: String,
+    db_url: String,
 }
 
 impl KrakenOpr {
@@ -26,6 +27,7 @@ impl KrakenOpr {
             kraken_api,
             percentages,
             trading_agreement,
+            db_url: db_url.to_string(),
         }
     }
 
@@ -230,11 +232,16 @@ impl KrakenOpr {
                 )
                 .unwrap();
 
-            send_notification(Notify::from((
-                current_assest.pair,
-                stop_loss_price.to_string(),
-                benefit,
-            )));
+            let db_url = self.db_url.clone();
+
+            let notification_request = agnostik::spawn(async move {
+                send_notification(
+                    Notify::from((current_assest.pair, stop_loss_price.to_string(), benefit)),
+                    db_url,
+                );
+            });
+
+            agnostik::block_on(notification_request);
         }
     }
 
