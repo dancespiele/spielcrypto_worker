@@ -140,7 +140,7 @@ impl From<(String, String, String)> for Notify {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NotifyEmail {
     pub pair: String,
     pub price: String,

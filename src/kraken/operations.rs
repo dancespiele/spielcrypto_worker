@@ -5,6 +5,7 @@ use super::helpers::{get_operation_type, get_order_type, OperationType, OrderTyp
 use super::notify::send_notification;
 use crate::db::{DancespieleDB, Percentage};
 use crate::utils::substract_pair;
+use agnostik::prelude::*;
 use chrono::{Local, TimeZone, Utc};
 use coinnect::error::{Error, ErrorKind, Result};
 use coinnect::kraken::{KrakenApi, KrakenCreds};
@@ -234,11 +235,14 @@ impl KrakenOpr {
 
             let db_url = self.db_url.clone();
 
-            let notification_request = agnostik::spawn(async move {
+            let runtime = Agnostik::tokio();
+
+            let notification_request = runtime.spawn(async move {
                 send_notification(
                     Notify::from((current_assest.pair, stop_loss_price.to_string(), benefit)),
                     db_url,
-                );
+                )
+                .await;
             });
 
             agnostik::block_on(notification_request);
