@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sled::{Db, Error, IVec, Result};
 use std::str;
-use tokio::time::{delay_for, Duration};
 
 pub struct DancespieleDB {
     db: Db,
@@ -32,38 +31,6 @@ impl DancespieleDB {
         let response: Vec<Percentage> = serde_json::from_str(percentages_string).unwrap();
 
         Ok(response)
-    }
-
-    pub async fn find_task_id(task_id: String, db_url: &str) -> Result<String> {
-        let mut index = 0;
-        let response: IVec;
-
-        loop {
-            let db_result = sled::open(db_url);
-
-            if let Ok(db) = db_result {
-                let response_result = db.get(task_id.clone());
-
-                if let Ok(response_option) = response_result {
-                    if let Some(res) = response_option {
-                        response = res;
-                        break;
-                    }
-                }
-            }
-
-            index += 1;
-
-            if index > 10 {
-                return Err(Error::Unsupported(String::from("Cannot retrieve the task")));
-            }
-
-            delay_for(Duration::from_millis(100)).await;
-        }
-
-        let message_body = str::from_utf8(&response).unwrap();
-
-        Ok(message_body.to_string())
     }
 }
 

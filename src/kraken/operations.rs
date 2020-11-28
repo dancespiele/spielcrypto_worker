@@ -2,8 +2,8 @@ use super::dtos::{
     CurrentPrice, FutureOperation, Info, Notify, OpenOrders, StopLossActive, Trades,
 };
 use super::helpers::{get_operation_type, get_order_type, OperationType, OrderType};
-use super::notify::send_notification;
 use crate::db::{DancespieleDB, Percentage};
+use crate::services::send_notification;
 use crate::utils::substract_pair;
 use agnostik::prelude::*;
 use chrono::{Local, TimeZone, Utc};
@@ -15,7 +15,6 @@ pub struct KrakenOpr {
     kraken_api: KrakenApi,
     percentages: Vec<Percentage>,
     trading_agreement: String,
-    db_url: String,
 }
 
 impl KrakenOpr {
@@ -28,7 +27,6 @@ impl KrakenOpr {
             kraken_api,
             percentages,
             trading_agreement,
-            db_url: db_url.to_string(),
         }
     }
 
@@ -233,15 +231,14 @@ impl KrakenOpr {
                 )
                 .unwrap();
 
-            let db_url = self.db_url.clone();
-
             let runtime = Agnostik::tokio();
 
             let notification_request = runtime.spawn(async move {
-                send_notification(
-                    Notify::from((current_assest.pair, stop_loss_price.to_string(), benefit)),
-                    db_url,
-                )
+                send_notification(Notify::from((
+                    current_assest.pair,
+                    stop_loss_price.to_string(),
+                    benefit,
+                )))
                 .await;
             });
 
