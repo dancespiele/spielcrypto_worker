@@ -24,6 +24,7 @@ For example imagine that you have `ETH` in [Kraken](https://www.kraken.com/) and
 
 ```
 SLED_URL=[PATH WHERE YOU WANT THE SLED DB FILE. NOTICE THAT THE DB IS SHARING WITH Dancespiele API]
+AMPQ_ADDR=[YOUR AMPQ ADDR]
 SECRET=[YOUR SECRET FOR THE API]
 API_URL=[DANCESPIELE API URL]
 EMAIL=[YOUR EMAIL TO GET THE NOTIFICATION OF THE ORDER]
@@ -47,6 +48,8 @@ TRADING_AGREEMENT=agree // FOR RESIDENTS IN GERMANY
 `cargo run`
 
 7. Enjoy!
+
+**Note:** Before to execute Dancespiele API you need to run the RabbitMQ server first
 
 **Note:** Dancespiele worker will check the coin prices every 2 minutes in case that it add a stop limit order you will be notified by email if Dancespiele API and your email server are correctly set
 
