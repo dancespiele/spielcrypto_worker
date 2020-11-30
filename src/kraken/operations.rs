@@ -2,9 +2,10 @@ use super::dtos::{
     CurrentPrice, FutureOperation, Info, Notify, OpenOrders, StopLossActive, Trades,
 };
 use super::helpers::{get_operation_type, get_order_type, OperationType, OrderType};
-use super::notify::send_notification;
 use crate::db::{DancespieleDB, Percentage};
+use crate::services::send_notification;
 use crate::utils::substract_pair;
+use agnostik::prelude::*;
 use chrono::{Local, TimeZone, Utc};
 use coinnect::error::{Error, ErrorKind, Result};
 use coinnect::kraken::{KrakenApi, KrakenCreds};
@@ -230,11 +231,18 @@ impl KrakenOpr {
                 )
                 .unwrap();
 
-            send_notification(Notify::from((
-                current_assest.pair,
-                stop_loss_price.to_string(),
-                benefit,
-            )));
+            let runtime = Agnostik::tokio();
+
+            let notification_request = runtime.spawn(async move {
+                send_notification(Notify::from((
+                    current_assest.pair,
+                    stop_loss_price.to_string(),
+                    benefit,
+                )))
+                .await;
+            });
+
+            agnostik::block_on(notification_request);
         }
     }
 
