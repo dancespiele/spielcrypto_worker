@@ -55,7 +55,7 @@ TRADING_AGREEMENT=agree // FOR RESIDENTS IN GERMANY
 
 ## Do you like Dancespiele apps?
 If you like Dancespiele apps, help me supporting the projects:
-- Sending coins to the address 0x619d3FA3bD7CF497d9899Ccd4d7b5663Ff318e52
+- Sending coins to the address **0x619d3FA3bD7CF497d9899Ccd4d7b5663Ff318e52**
 - BAT rewards in case that you use [Brave Browser](https://brave.com/)
 - [Github Sponsors](https://github.com/sponsors/dancespiele)
 - Burst coins to the address BURST-DPN6-2AT3-FCRL-9BBKG
