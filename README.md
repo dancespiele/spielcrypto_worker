@@ -5,7 +5,7 @@ Spielcrypto Worker is an cron job task application that add stop loss order in e
 ## How it works
 
 First you need to set the increment percent of your current coins price that you wish to put a stop loss using [Spielcrypto API](https://github.com/dancespiele/spielcrypto_api).
-For example imagine that you have `ETH` in [Kraken](https://www.kraken.com/) and its current price is `300 EUR` and you set in [Dancespiele API](https://github.com/dancespiele/spielcrypto_api) the parameter `new_stop_loss` an increment of `0.20` (20%) then `ETH` increase to `370 EUR` (more than 20%) in the future, the Dancespiele Worker will add automatically a stop loss with a price of `354 EUR` (always 2% less than the stop loss set) guaranteeing a benefit of `54 EUR`, now you set the paremeter `next_stop_loss` to `0.10` (10%) and `ETH` increase to `410` (more than 10%), the application will set a stop loss of `398,86 €` based in the increment from the previous stop loss and it will continue setting new stop loss each time that price increase more than 10%.
+For example imagine that you have `ETH` in [Kraken](https://www.kraken.com/) and its current price is `300 EUR` and you set in [Spielcrypto API](https://github.com/dancespiele/spielcrypto_api) the parameter `new_stop_loss` an increment of `0.20` (20%) then `ETH` increase to `370 EUR` (more than 20%) in the future, the Spielcrypto Worker will add automatically a stop loss with a price of `354 EUR` (always 2% less than the stop loss set) guaranteeing a benefit of `54 EUR`, now you set the paremeter `next_stop_loss` to `0.10` (10%) and `ETH` increase to `410` (more than 10%), the application will set a stop loss of `398,86 €` based in the increment from the previous stop loss and it will continue setting new stop loss each time that price increase more than 10%.
 
 ## Requirements
 
@@ -61,6 +61,6 @@ If you like Dancespiele apps, help me supporting the projects:
 - Burst coins to the address BURST-DPN6-2AT3-FCRL-9BBKG
 
 ## License
-Spielcrypto Worker is [LICENSE PARITY](LICENSE-PARITY.md) and [LICENSE PATRON](LICENSE-PATRON.md) licensed. If you need a comercial license, sponsor to dancespiele in the right tier or contact to `spielcrypto@gmail.com`
+Spielcrypto Worker is [LICENSE PARITY](LICENSE-PARITY.md) and [LICENSE PATRON](LICENSE-PATRON.md) licensed. If you need a comercial license, sponsor to Dancespiele in the right tier or contact to `spielcrypto@gmail.com`
 
 **Warning:** Each functionality has unit test to avoid bugs however the author of this app is not responsible for all the issues and losses that can happen using it. Please, read the licenses.
