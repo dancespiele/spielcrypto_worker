@@ -5,7 +5,8 @@ pub fn substract_pair(pair: &str) -> String {
         "XBT", "ETH", "USDT", "XRP", "LINK", "BCH", "LTC", "DOT", "ADA", "USDC", "EOS", "XMR",
         "TRX", "XLM", "XTZ", "ATOM", "DAI", "FIL", "UNI", "DASH", "ZEC", "ETC", "YFI", "OMG",
         "COMP", "SNX", "WAVES", "XDG", "KSM", "ALGO", "BAT", "ICX", "QTUM", "KNC", "REP", "REPV2",
-        "LSK", "SC", "NANO", "BAL", "OXT", "CRV", "PAXG", "STORJ", "KAVA", "GNO", "MLN",
+        "LSK", "SC", "NANO", "BAL", "OXT", "CRV", "PAXG", "STORJ", "KAVA", "GNO", "MLN", "KEEP",
+        "TBTC", "ANT", "MANA", "AAVE", "GRT"
     ];
 
     current_currencies.into_iter().for_each(|c| {
@@ -26,7 +27,8 @@ fn should_substract_the_currency_from_pair() {
         "XBT", "ETH", "USDT", "XRP", "LINK", "BCH", "LTC", "DOT", "ADA", "USDC", "EOS", "XMR",
         "TRX", "XLM", "XTZ", "ATOM", "DAI", "FIL", "UNI", "DASH", "ZEC", "ETC", "YFI", "OMG",
         "COMP", "SNX", "WAVES", "XDG", "KSM", "ALGO", "BAT", "ICX", "QTUM", "KNC", "REP", "REPV2",
-        "LSK", "SC", "NANO", "BAL", "OXT", "CRV", "PAXG", "STORJ", "KAVA", "GNO", "MLN",
+        "LSK", "SC", "NANO", "BAL", "OXT", "CRV", "PAXG", "STORJ", "KAVA", "GNO", "MLN","KEEP",
+        "TBTC", "ANT", "MANA", "AAVE", "GRT"
     ];
 
     current_currencies.into_iter().for_each(|cc| {
